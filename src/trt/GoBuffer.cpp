@@ -5,6 +5,7 @@
 #include <cuda_runtime_api.h>
 #include <memory>
 #include "NvInfer.h"
+#include <opencv2/opencv.hpp>
 
 // using namespace gotrt;
 
@@ -27,9 +28,9 @@ void gotrt::GoBuffer::initialize(int _batch_size,
     output_tensor.resize(_output_dims->size());
     for(int i = 0; i < output_tensor.size(); i++)
     {
-        output_tensor[i].channel = (*_output_dims)[i].d[1];
-        output_tensor[i].height = (*_output_dims)[i].d[2];
-        output_tensor[i].width = (*_output_dims)[i].d[3];
+        output_tensor[i].channel = (*_output_dims)[i].d[0];
+        output_tensor[i].height = (*_output_dims)[i].d[1];
+        output_tensor[i].width = (*_output_dims)[i].d[2];
         output_tensor[i].tensor_size = batch_size * output_tensor[i].channel * output_tensor[i].height * output_tensor[i].width * sizeof(float);
         output_tensor[i].cpu_tensor = new float[output_tensor[i].tensor_size];
         cudaMallocAsync(&output_tensor[i].gpu_tensor, output_tensor[i].tensor_size, stream);
@@ -61,7 +62,7 @@ void gotrt::GoBuffer::cpyInputToDevice()
 }
 
 void gotrt::GoBuffer::cpyOutputToHost(int index) {
-    std::cout << "GoBuffer::copyOutputToHost()" << std::endl;
+    // std::cout << "GoBuffer::copyOutputToHost()" << std::endl;
     cudaMemcpyAsync(output_tensor[index].cpu_tensor, output_tensor[index].gpu_tensor, output_tensor[index].tensor_size, cudaMemcpyDeviceToHost, stream);
 }
 

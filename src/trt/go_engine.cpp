@@ -18,7 +18,7 @@ void GoEngine::Release() {
 }
 
 bool GoEngine::LoadEngine(ModelParams _model_params,
-                          std::shared_ptr<nvinfer1::Dims32> _input_dims,
+                          std::shared_ptr<nvinfer1::Dims32> _input_dim,
                           std::shared_ptr<std::vector<nvinfer1::Dims32>> _output_dims)
 {
     std::cout << "GoEngine::load_engine()" << std::endl;
@@ -59,13 +59,18 @@ bool GoEngine::LoadEngine(ModelParams _model_params,
         engine_.reset();
         return false;
     }
-    *_input_dims = engine_->getBindingDimensions(0);
+    if(engine_->getNbBindings() < 1)
+        std::cout << "error " << engine_->getNbBindings() << std::endl;
+    *_input_dim = engine_->getBindingDimensions(0);
     _output_dims->push_back(engine_->getBindingDimensions(engine_->getNbBindings() - 1));
     for (int i = 1; i < engine_->getNbBindings() - 1; i++) {
         _output_dims->push_back(engine_->getBindingDimensions(i));
     }
-    this->input_dims_ = _input_dims;
+    this->input_dim_ = _input_dim;
     this->output_dims_ = _output_dims;
+    context_ = std::unique_ptr<nvinfer1::IExecutionContext>(engine_->createExecutionContext());
+    if(!context_) return false;
+    return true;
 }
 
 bool GoEngine::ConstructNetwork(std::unique_ptr<nvinfer1::IBuilder>& builder,
@@ -94,4 +99,10 @@ bool GoEngine::ConstructNetwork(std::unique_ptr<nvinfer1::IBuilder>& builder,
     // samplesCommon::enableDLA(builder.get(), config.get(), mParams.dlaCore);
 
     return true;
+}
+
+bool GoEngine::Inference(void* _tensor)
+{
+    std::cout << "GoEngine::inference()" << std::endl;
+    return context_->executeV2(&_tensor);
 }

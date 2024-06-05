@@ -5,8 +5,6 @@
 #ifndef WINTRT_GOBUFFER_H
 #define WINTRT_GOBUFFER_H
 
-#endif //WINTRT_GOBUFFER_H
-
 #include <vector>
 #include <iostream>
 #include "NvInfer.h"
@@ -46,3 +44,5 @@ namespace gotrt{
         cudaStream_t stream;
     };
 }
+
+#endif //WINTRT_GOBUFFER_H

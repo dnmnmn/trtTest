@@ -14,7 +14,7 @@ class InputStream {
 public:
     InputStream() {};
     ~InputStream() {};
-    void Initialize(int _height=1080, int _width=1920);
+    virtual void Initialize(std::string _file_name="InputStream", int _height=1080, int _width=1920);
     virtual void Release();
 
     virtual cv::Mat GetFrame();

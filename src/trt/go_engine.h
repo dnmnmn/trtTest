@@ -33,6 +33,7 @@ namespace gotrt {
         bool LoadEngine(ModelParams _model_params,
                         std::shared_ptr<nvinfer1::Dims32> _input_dims,
                         std::shared_ptr<std::vector<nvinfer1::Dims32>> _output_dims);
+        bool Inference(void* _tensor);
     private:
         bool ConstructNetwork(std::unique_ptr<nvinfer1::IBuilder>& builder,
                               std::unique_ptr<nvinfer1::INetworkDefinition>& network,
@@ -42,8 +43,10 @@ namespace gotrt {
     private:
         std::unique_ptr<cudaStream_t> stream_;
         std::shared_ptr<nvinfer1::ICudaEngine> engine_;
-        std::weak_ptr<nvinfer1::Dims32> input_dims_;
+        std::unique_ptr<nvinfer1::IExecutionContext> context_;
+        std::weak_ptr<nvinfer1::Dims32> input_dim_;
         std::weak_ptr<std::vector<nvinfer1::Dims32>> output_dims_;
+
     };
 
 } // gotrt

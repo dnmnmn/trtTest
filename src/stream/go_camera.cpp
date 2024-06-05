@@ -4,7 +4,7 @@
 #include "go_camera.h"
 #include <iostream>
 
-void InputStream::Initialize(int _height, int _width) {
+void InputStream::Initialize(std::string _file_name, int _height, int _width) {
     std::cout << "InputStream::Initialize()" << std::endl;
     height_ = _height;
     width_ = _width;

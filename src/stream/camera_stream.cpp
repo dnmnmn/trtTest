@@ -4,7 +4,7 @@
 
 #include "camera_stream.h"
 
-void CameraStream::Initialize(int _height, int _width) {
+void CameraStream::Initialize(std::string _file_name, int _height, int _width) {
     height_ = _height;
     width_ = _width;
     cap = cv::VideoCapture(1);

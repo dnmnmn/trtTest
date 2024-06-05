@@ -9,7 +9,7 @@
 
 class CameraStream : public InputStream{
 public:
-    void Initialize(int _height=1080, int _width=1920);
+    void Initialize(std::string _file_name="CameraStream", int _height=1080, int _width=1920) override;
     void Release() override;
 
     cv::Mat GetFrame() override;

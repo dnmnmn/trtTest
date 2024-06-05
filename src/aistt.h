@@ -16,6 +16,9 @@
 #include "postprocess.h"
 #include "stream/go_camera.h"
 #include "stream/dai_stream.h"
+#include "stream/image_stream.h"
+#include "stream/video_stream.h"
+
 
 class AISTT {
 public:
@@ -29,24 +32,37 @@ public:
     void Inference();
     void Preprocess();
     void Postprocess();
-    void Draw();
+    bool Draw();
+
+
 
 private:
     std::shared_ptr<gotrt::GoEngine> engine_;
     std::shared_ptr<gotrt::GoBuffer> buffer_;
     std::shared_ptr<PreProcess> preprocess_;
     std::shared_ptr<PostProcess> postprocess_;
-    std::shared_ptr<InputStream> camera_;
+    std::shared_ptr<InputStream> camera_= nullptr;
     std::unique_ptr<cudaStream_t> stream_;
 
-    std::shared_ptr<nvinfer1::Dims32> input_dims_;
+    std::shared_ptr<nvinfer1::Dims32> input_dim_;
     std::shared_ptr<std::vector<nvinfer1::Dims32>> output_dims_;
+    cv::Mat image_;
 
 private:
     int org_image_height_;
     int org_image_width_;
     bool use_cam_;
     bool is_obb_;
+    int32_t input_tensor_size_;
+    std::vector<int32_t> output_tensor_size_;
+    std::vector<std::vector<float>> boxes;
+
+private:
+    inline bool ends_with(std::string const & value, std::string const & ending)
+    {
+        if (ending.size() > value.size()) return false;
+        return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+    }
 };
 
 #endif //WINTRT_GOENGINE_H

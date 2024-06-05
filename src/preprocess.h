@@ -41,7 +41,7 @@ public:
     void bgr2rgb(cv::Mat* src, cv::Mat* dst);
     void debug(float* data, std::string name, int c, int h, int w, int layout = int(layout_e::CHW));
 private:
-    cv::Mat* resize_image_;
+    // cv::Mat* resize_image_;
     cv::Mat* normalize_image_;
     cv::Mat* denormalize_image_;
     cv::Mat* hwc_image_;
@@ -53,6 +53,7 @@ private:
     std::weak_ptr<nvinfer1::Dims32> input_dims_;
     std::weak_ptr<std::vector<nvinfer1::Dims32>> output_dims_;
 public:
+    cv::Mat* resize_image_;
     int width = 640;
     int height = 640;
     int org_width = 1920;

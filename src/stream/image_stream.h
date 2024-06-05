@@ -9,7 +9,7 @@
 
 class ImageStream : public InputStream{
 public:
-    void Initialize(std::string image_path, int height=1080, int width=1920);
+    void Initialize(std::string image_path, int height=1080, int width=1920) override;
     void Release() override;
 
     cv::Mat GetFrame() override;

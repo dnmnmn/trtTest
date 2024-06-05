@@ -9,7 +9,7 @@
 
 class VideoStream : public InputStream{
 public:
-    void Initialize(std::string _video_path, int _height=1080, int _width=1920);
+    void Initialize(std::string _video_path, int _height=1080, int _width=1920) override;
     void Release() override;
 
     cv::Mat GetFrame() override;

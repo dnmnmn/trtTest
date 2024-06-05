@@ -4,12 +4,12 @@
 
 #include "dai_stream.h"
 
-void DAIStream::Initialize(int height, int width)
+void DAIStream::Initialize(std::string _file_name, int height, int width)
 {
     // Define source and output
     camRgb = pipeline.create<dai::node::Camera>();
     xoutVideo = pipeline.create<dai::node::XLinkOut>();
-    xoutVideo->setStreamName("video");
+    xoutVideo->setStreamName(_file_name);
 
     // Properties
     camRgb->setBoardSocket(dai::CameraBoardSocket::CAM_A);

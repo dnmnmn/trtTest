@@ -296,20 +296,21 @@ void PostProcessBase::normalize(float *output, float conf_threshold)
     // if(box_count == 0) return false;
 }
 
-std::vector<std::vector<float>> PostProcessBase::denormalize(std::vector<std::vector<float>> _box, int _size)
+void PostProcessBase::denormalize(std::vector<std::vector<float>> _input_box, int _size, std::vector<std::vector<float>>* _output_box)
 {
     // [x1, y1, x2, y2, conf, class]
-    int size = _size > _box.size() ? _box.size() : _size;
-    std::vector<std::vector<float>> box(size, std::vector<float>(7, 0));
+    int size = _size > _input_box.size() ? _input_box.size() : _size;
+    _output_box->clear();
+    _output_box->resize(size, std::vector<float>(7, 0));
     for(int i = 0; i < size; i++)
     {
-        box[i] = _box[i];
-        box[i][0] *= input_width;
-        box[i][1] *= input_height;
-        box[i][2] *= input_width;
-        box[i][3] *= input_height;
+        (*_output_box)[i] = _input_box[i];
+        (*_output_box)[i][0] *= input_width;
+        (*_output_box)[i][1] *= input_height;
+        (*_output_box)[i][2] *= input_width;
+        (*_output_box)[i][3] *= input_height;
     }
-    return box;
+    return;
 }
 
 void PostProcessOBB::normalize(float *output, float conf_threshold)
@@ -354,28 +355,30 @@ void PostProcessOBB::normalize(float *output, float conf_threshold)
     std::sort(boxes.begin(), boxes.end(), [](const std::vector<float>& a, const std::vector<float>& b) { return a[4] > b[4]; });
 }
 
-std::vector<std::vector<float>> PostProcessOBB::denormalize(std::vector<std::vector<float>> _box, int _size)
+void PostProcessOBB::denormalize(std::vector<std::vector<float>> _input_box, int _size, std::vector<std::vector<float>>* _output_box)
 {
     // [x1, y1, x2, y2, conf, class, angle]
     // [x1, y1, x2, y2, x3, y3, x4, y4, conf, class]]
-    int size = _size > _box.size() ? _box.size() : _size;
-    std::vector<std::vector<float>> box(size, std::vector<float>(10, 0));
-    for(int i = 0; i < _box.size(); i++)
+    int size = _size > _input_box.size() ? _input_box.size() : _size;
+    // std::vector<std::vector<float>> box(size, std::vector<float>(10, 0));
+    _output_box->clear();
+    _output_box->resize(size, std::vector<float>(10, 0));
+    for(int i = 0; i < _input_box.size(); i++)
     {
-        auto b = _box[i];
+        auto b = _input_box[i];
         cv::RotatedRect rRect = cv::RotatedRect(cv::Point2f((b[0]+b[2])/2 * input_width,(b[1]+b[3])/2 * input_height), cv::Size2f((b[2] - b[1]) * input_width,(b[3]-b[1]) * input_height), b[6]);
         cv::Point2f vertices[4];
         rRect.points(vertices);
-        box[i][0] = vertices[0].x;
-        box[i][1] = vertices[0].y;
-        box[i][2] = vertices[1].x;
-        box[i][3] = vertices[1].y;
-        box[i][4] = vertices[2].x;
-        box[i][5] = vertices[2].y;
-        box[i][6] = vertices[3].x;
-        box[i][7] = vertices[3].y;
-        box[i][8] = b[4];
-        box[i][9] = b[5];
+        (*_output_box)[i][0] = vertices[0].x;
+        (*_output_box)[i][1] = vertices[0].y;
+        (*_output_box)[i][2] = vertices[1].x;
+        (*_output_box)[i][3] = vertices[1].y;
+        (*_output_box)[i][4] = vertices[2].x;
+        (*_output_box)[i][5] = vertices[2].y;
+        (*_output_box)[i][6] = vertices[3].x;
+        (*_output_box)[i][7] = vertices[3].y;
+        (*_output_box)[i][8] = b[4];
+        (*_output_box)[i][9] = b[5];
     }
-    return box;
+    return;
 }

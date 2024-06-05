@@ -1,6 +1,10 @@
 //
 // Created by gopizza on 2024-05-23.
 //
+
+#ifndef WINTRT_POSTPROCESS_H
+#define WINTRT_POSTPROCESS_H
+
 #include <vector>
 #include <memory>
 #include <opencv2/opencv.hpp>
@@ -23,7 +27,7 @@ public:
     void clear();
 
     virtual void normalize(float* data, float conf_threshold=0.35f) = 0;
-    virtual std::vector<std::vector<float>>  denormalize(std::vector<std::vector<float>> data, int size) = 0;
+    virtual void denormalize(std::vector<std::vector<float>> _input_box, int size, std::vector<std::vector<float>>* _output_box) = 0;
 
 protected:
     int input_width;
@@ -48,11 +52,13 @@ protected:
 class PostProcessOBB : public PostProcess {
 public:
     void normalize(float* data, float conf_threshold=0.35f) override;
-    std::vector<std::vector<float>>  denormalize(std::vector<std::vector<float>> data, int size) override;
+    void denormalize(std::vector<std::vector<float>> _input_box, int size, std::vector<std::vector<float>>* _output_box) override;
 };
 
 class PostProcessBase : public PostProcess {
 public:
     void normalize(float* data, float conf_threshold=0.35f) override;
-    std::vector<std::vector<float>>  denormalize(std::vector<std::vector<float>> data, int size) override;
+    void denormalize(std::vector<std::vector<float>> _input_box, int size, std::vector<std::vector<float>>* _output_box) override;
 };
+
+#endif //WINTRT_POSTPROCESS_H

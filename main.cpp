@@ -48,7 +48,11 @@
 #include "src/stream/go_camera.h"
 #include "src/Timer.h"
 #include "src/trt/GoBuffer.h"
-// #include "src/aistt.h"
+#include "src/stream/go_camera.h"
+#include "src/stream/camera_stream.h"
+#include "src/stream/video_stream.h"
+#include "src/stream/image_stream.h"
+#include "src/aistt.h"
 
 using namespace nvinfer1;
 using samplesCommon::SampleUniquePtr;
@@ -77,7 +81,7 @@ public:
     //!
     //! \brief Runs the TensorRT inference engine for this sample
     //!
-    bool infer(cv::Mat image);
+    bool infer();
     bool release();
 private:
     samplesCommon::OnnxSampleParams mParams; //!< The parameters for the sample.
@@ -118,6 +122,12 @@ private:
     // bool Tensor_Debug(const samplesCommon::BufferManager& buffers);
     bool Tensor_Debug(float* tensor, int32_t* dims, int32_t size);
 };
+
+bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
 
 //!
 //! \brief Creates the network, configures the builder and creates the network engine
@@ -224,6 +234,21 @@ bool SampleOnnxMNIST::build()
     //ASSERT(mOutputDims.nbDims == 3);
     int org_image_width = 4032;
     int org_image_height = 1504;
+    std::string file_name = "test.jpg";
+    if(ends_with(file_name, ".jpg") || ends_with(file_name, ".png"))
+    {
+        camera = std::make_shared<ImageStream>();
+    }
+    else if(ends_with(file_name, ".mp4") || ends_with(file_name, ".avi"))
+    {
+        camera = std::make_shared<VideoStream>();
+    }
+    else
+    {
+        camera = std::make_shared<CameraStream>();
+    }
+    camera->Initialize(file_name, org_image_height, org_image_width);
+
     //camera.initialize();
     //camera.camera_load(org_image_height, org_image_width);
     bool is_obb = false;
@@ -244,7 +269,7 @@ bool SampleOnnxMNIST::build()
         printf("\n");
     }
     gobuffer = std::make_shared<gotrt::GoBuffer>();
-    gobuffer->initialize(2, mInputDims, mOutputDims);
+    gobuffer->initialize(1, mInputDims, mOutputDims);
     gobuffer->ready();
     return true;
 }
@@ -334,7 +359,7 @@ bool SampleOnnxMNIST::Tensor_Debug(float* tensor, int32_t* dims, int32_t size)
 //! \details This function is the main execution function of the sample. It allocates the buffer,
 //!          sets inputs and executes the engine.
 //!
-bool SampleOnnxMNIST::infer(cv::Mat image)
+bool SampleOnnxMNIST::infer()
 {
     // Create RAII buffer manager object
     timer.start();
@@ -347,21 +372,22 @@ bool SampleOnnxMNIST::infer(cv::Mat image)
         return false;
     }
 
-    // Read the input data into the managed buffers
-    ASSERT(mParams.inputTensorNames.size() == 1);
-    // cv::Mat image = camera.get_frame().clone();
-
+    cv::Mat image = camera->GetFrame().clone();
+    timer.start();
     if (!processInput(buffers, image))
     {
         return false;
     }
-
+    auto infer_time = timer.end();
+    sample::gLogInfo << "PreProcess time: " << infer_time << "ms" << std::endl;
     // Memcpy from host input buffers to device input buffers
     buffers.copyInputToDevice();
     timer.start();
-    bool status = context->executeV2(buffers.getDeviceBindings().data());
-    auto infer_time = timer.end();
-    // bool status = context->executeV2(gobuffer->getDeviceBindings().data());
+    // bool status = context->executeV2(buffers.getDeviceBindings().data());
+    bool status = context->executeV2(gobuffer->getDeviceBindings().data());
+    infer_time = timer.end();
+    sample::gLogInfo << "Inference time: " << infer_time << "ms" << std::endl;
+    //
     if (!status)
     {
         return false;
@@ -369,14 +395,15 @@ bool SampleOnnxMNIST::infer(cv::Mat image)
 
     // Memcpy from device output buffers to host output buffers
     buffers.copyOutputToHost();
-    // gobuffer->cpyOutputToHost(0);
+    gobuffer->cpyOutputToHost(0);
     // Verify results
+    timer.start();
     if (!verifyOutput(buffers, image))
     {
         return false;
     }
-
-    sample::gLogInfo << "Inference time: " << infer_time << "ms" << std::endl;
+    infer_time = timer.end();
+    sample::gLogInfo << "PostProcess time: " << infer_time << "ms" << std::endl;
 //    float* tensor1 = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[1]));
 //    if(!Tensor_Debug(tensor1, mOutputDims1.d, 1)) return false;
 //    float* tensor2 = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[2]));
@@ -396,8 +423,8 @@ bool SampleOnnxMNIST::processInput(const samplesCommon::BufferManager& buffers, 
     void* preprocess_data = preprocess->opencv_preprocess(&image);
 
     memcpy(hostDataBuffer, preprocess_data, mInputDims->d[2] * mInputDims->d[3] * 3 * sizeof(float));
-    //memcpy(gobuffer->getInputTensor(),preprocess_data, mInputDims.d[2] * mInputDims.d[3] * 3 * sizeof(float));
-    //gobuffer->cpyInputToDevice();
+    memcpy(gobuffer->getInputTensor(),preprocess_data, mInputDims->d[2] * mInputDims->d[3] * 3 * sizeof(float));
+    gobuffer->cpyInputToDevice();
     return true;
 }
 
@@ -410,13 +437,14 @@ bool SampleOnnxMNIST::processInput(const samplesCommon::BufferManager& buffers, 
 
 bool SampleOnnxMNIST::verifyOutput(const samplesCommon::BufferManager& buffers, cv::Mat image)
 {
-    float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
-    // float* output = gobuffer->getOutputTensor(0);
+    // float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
+    float* output = gobuffer->getOutputTensor(0);
     // postprocess->debug(output);
     postprocess->clear();
     postprocess->normalize(output, 0.25);
     auto normalize_box= postprocess->weighted_boxes_fusion();
-    auto box = postprocess->denormalize(normalize_box, 100);
+    std::vector<std::vector<float>> box;
+    postprocess->denormalize(normalize_box, 100, &box);
 
     cv::Mat reimage;
 
@@ -511,11 +539,10 @@ int main(int argc, char** argv)
     sample::gLogger.reportTestStart(sampleTest);
 
     SampleOnnxMNIST sample(initializeSampleParams(args));
-    cv::Mat image = cv::imread("test.jpg");
-//    AISTT aistt = AISTT();
-//    aistt.Initialize();
-//
-//    aistt.CreateModule(1504, 4032, false, false);
+    AISTT aistt = AISTT();
+    aistt.Initialize();
+
+    aistt.CreateModule(1504, 4032, false, false);
 
     sample::gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
 
@@ -529,7 +556,7 @@ int main(int argc, char** argv)
     while(true)
     {
 
-        if (!sample.infer(image))
+        if (!sample.infer())
         {
             break;
         }
@@ -538,6 +565,7 @@ int main(int argc, char** argv)
     {
         return sample::gLogger.reportFail(sampleTest);
     }
+    aistt.Release();
     return sample::gLogger.reportPass(sampleTest);
 }
 
