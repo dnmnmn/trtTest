@@ -1,0 +1,67 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# Build results
+cmake-build*/
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# files
+.txt
+.jpg
+.png
+.pgm
+.avi
+.mp4
+
+#weights
+.onnx
+.pt
+
+# Dynamic library
+*.dll
+*.so
+
+# Static library
+*.lib
+*.a
+
+# Executable
+*.exe
+*.out
+
+# exe
+#.exe
