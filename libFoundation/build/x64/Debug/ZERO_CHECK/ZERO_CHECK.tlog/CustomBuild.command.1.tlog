@@ -1,0 +1,10 @@
+^C:\SOURCE\TEST\TRTGIT\TRTTEST\LIBFOUNDATION\BUILD\CMAKEFILES\8B6E6835B6FFDC7DF4AEF75DDA904444\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Source/test/trtgit/trtTest/libFoundation -BC:/Source/test/trtgit/trtTest/libFoundation/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Source/test/trtgit/trtTest/libFoundation/build/libFoundation.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

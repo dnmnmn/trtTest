@@ -1,0 +1,3 @@
+C:/Source/test/trtgit/trtTest/libFoundation/build/CMakeFiles/libFoundation.dir
+C:/Source/test/trtgit/trtTest/libFoundation/build/CMakeFiles/ALL_BUILD.dir
+C:/Source/test/trtgit/trtTest/libFoundation/build/CMakeFiles/ZERO_CHECK.dir
